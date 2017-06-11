@@ -1,9 +1,8 @@
 import java.util.Arrays;
-import java.util.logging.Logger;
 
+@SuppressWarnings({"SameParameterValue", "unused"})
 public class CircuitGarbling {
 
-    private static final Logger LOG = Logger.getLogger(CircuitGarbling.class.getSimpleName());
     /**
      * Array to store the left side of keys of the circuit participants.
      */
@@ -36,72 +35,119 @@ public class CircuitGarbling {
      */
     private void garblePnP(int gateIndex) {
         print("=========PnP========");
-        print("AND gate with id= " + gateIndex+"\n");
+        print("AND gate with id= " + gateIndex + "\n");
         // Calculating the keys
         keysL[0] = hashInsecure(0);
         keysL[1] = keysL[0] ^ 32767;
         keysR[0] = hashInsecure(1);
         keysR[1] = keysR[0] ^ 32767;
         keysO[0] = 0;
+        //TODO: this needs to be set by knowing which combination is the first row of the AND gate
+        //  but orderCanonicalByLsb depends on keysO already set up -> chicken egg problem
         keysO[0] = encryptInsecure(keysL[1], keysR[1], keysO[1], gateIndex);
         keysO[1] = hashInsecure(2);
-        int[] orderedKeys = orderCanonicalByLsb();
-        print(Arrays.toString(orderedKeys));
+        // Set up an double dimensional array to order the keys by their LSB in canonical order
+        int[][] orderedKeys = orderCanonicalByLsb();
         // Printing calculated keys
-        print("\nKeys_L[0, 1] = " + Arrays.toString(keysL)
+        print("Keys_L[0, 1] = " + Arrays.toString(keysL)
                 + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
                 + "\nKeys_O[0, 1] = " + Arrays.toString(keysO));
         // Encrypt the four values of the AND gate
+        for (int i = 0; i < 4; i++) {
+            gt[i] = encryptInsecure(orderedKeys[i][0], orderedKeys[i][1], orderedKeys[i][2], gateIndex);
+        }
+        /*
         gt[0] = encryptInsecure(keysL[1], keysR[1], keysO[1], gateIndex);
         gt[1] = encryptInsecure(keysL[1], keysR[0], keysO[0], gateIndex);
         gt[2] = encryptInsecure(keysL[0], keysR[1], keysO[0], gateIndex);
         gt[3] = encryptInsecure(keysL[0], keysR[0], keysO[0], gateIndex);
+         */
         // Printing encrypted keys
-        print("\nEncKeys[0, 1, 2, 3] = " + Arrays.toString(gt));
+        print("\ngt00= " + gt[0] + "\ngt01= " + gt[1] + "\ngt10= " + gt[2] + "\ngt11= " + gt[3]);
         print("=====================");
     }
 
     /**
-     * Orders the keys {@link #keysL} and {@link #keysR} in an array by their LSB.<br>
-     * The array will be [EVEN, EVEN, ODD, ODD].<br>
+     * Orders the keys {@link #keysL}, {@link #keysR} and appropriate {@link #keysO}
+     * in an array by their LSB in canonical order.<br>
      * This fails if a key pair is not on the one side even (e.g. keyL⁰) and on the other side odd (e.g. keyL¹).
      *
-     * @return ordered int array.
+     * @return ordered int array with dimension [4][3].
      */
-    private int[] orderCanonicalByLsb() {
-        final int[] orderedKeys = new int[4];
+    private int[][] orderCanonicalByLsb() {
+        final int[][] orderedKeys = new int[4][3];
+        // This approach only works, if keyL⁰ and keyL¹ OR keyR⁰ and keyR¹  differ in their LSB
         assert (keysL[0] % 2 == 0 && keysL[1] % 2 == 1) || (keysL[0] % 2 == 1 && keysL[1] % 2 == 0);
-        assert (keysR[0] % 2 == 0 || keysR[1] % 2 == 1) || (keysR[0] % 2 == 1 || keysR[1] % 2 == 0);
-        if (keysL[0] % 2 == 0) {
-            if (keysR[0] % 2 == 0) {
-                setOrderByKeys(orderedKeys, keysL[0], keysR[0], keysL[1], keysR[1]);
-            } else {
-                setOrderByKeys(orderedKeys, keysL[0], keysR[1], keysL[1], keysR[0]);
-            }
-        } else { // keysL[0] is odd
-            if (keysR[0] % 2 == 0) {
-                setOrderByKeys(orderedKeys, keysL[1], keysR[0], keysL[0], keysR[1]);
-            } else {
-                setOrderByKeys(orderedKeys, keysL[1], keysR[1], keysL[0], keysR[0]);
-            }
+        assert (keysR[0] % 2 == 0 && keysR[1] % 2 == 1) || (keysR[0] % 2 == 1 && keysR[1] % 2 == 0);
+        // First row of AND gate
+        if (keysL[0] % 2 == 0 && keysR[0] % 2 == 0) {
+            orderKeys(orderedKeys[0], keysL[0], keysR[0], keysO[0]);
+        }
+        if (keysL[0] % 2 == 0 && keysR[1] % 2 == 0) {
+            orderKeys(orderedKeys[0], keysL[0], keysR[1], keysO[0]);
+        }
+        if (keysL[1] % 2 == 0 && keysR[0] % 2 == 0) {
+            orderKeys(orderedKeys[0], keysL[1], keysR[0], keysO[0]);
+        }
+        if (keysL[1] % 2 == 0 && keysR[1] % 2 == 0) {
+            orderKeys(orderedKeys[0], keysL[1], keysR[1], keysO[1]);
+        }
+        // Second row of AND gate
+        if (keysL[0] % 2 == 0 && keysR[0] % 2 == 1) {
+            orderKeys(orderedKeys[1], keysL[0], keysR[0], keysO[0]);
+        }
+        if (keysL[0] % 2 == 0 && keysR[1] % 2 == 1) {
+            orderKeys(orderedKeys[1], keysL[0], keysR[1], keysO[0]);
+        }
+        if (keysL[1] % 2 == 0 && keysR[0] % 2 == 1) {
+            orderKeys(orderedKeys[1], keysL[1], keysR[0], keysO[0]);
+        }
+        if (keysL[1] % 2 == 0 && keysR[1] % 2 == 1) {
+            orderKeys(orderedKeys[1], keysL[1], keysR[1], keysO[1]);
+        }
+        // Third row of AND gate
+        if (keysL[0] % 2 == 1 && keysR[0] % 2 == 0) {
+            orderKeys(orderedKeys[2], keysL[0], keysR[0], keysO[0]);
+        }
+        if (keysL[0] % 2 == 1 && keysR[1] % 2 == 0) {
+            orderKeys(orderedKeys[2], keysL[0], keysR[1], keysO[0]);
+        }
+        if (keysL[1] % 2 == 1 && keysR[0] % 2 == 0) {
+            orderKeys(orderedKeys[2], keysL[1], keysR[0], keysO[0]);
+        }
+        if (keysL[1] % 2 == 1 && keysR[1] % 2 == 0) {
+            orderKeys(orderedKeys[2], keysL[1], keysR[1], keysO[1]);
+        }
+        // Fourth row of AND gate
+        if (keysL[0] % 2 == 1 && keysR[0] % 2 == 1) {
+            orderKeys(orderedKeys[3], keysL[0], keysR[0], keysO[0]);
+        }
+        if (keysL[0] % 2 == 1 && keysR[1] % 2 == 1) {
+            orderKeys(orderedKeys[3], keysL[0], keysR[1], keysO[0]);
+        }
+        if (keysL[1] % 2 == 1 && keysR[0] % 2 == 1) {
+            orderKeys(orderedKeys[3], keysL[1], keysR[0], keysO[0]);
+        }
+        if (keysL[1] % 2 == 1 && keysR[1] % 2 == 1) {
+            orderKeys(orderedKeys[3], keysL[1], keysR[1], keysO[1]);
         }
         return orderedKeys;
     }
 
     /**
-     * Helper which sets the array's indices by the given integers.
+     * Sets the three given keys on their appropriate index in a given inner index of the canonical ordered array of
+     * {@link #orderCanonicalByLsb()}.
      *
-     * @param orderedKeys array to set.
-     * @param i           int for the first index.
-     * @param i1          int for the second index.
-     * @param i2          int for the third index.
-     * @param i3          int for the fourth index.
+     * @param innerOrderedKeys given inner index.
+     * @param keyL             key left.
+     * @param keyR             key right.
+     * @param keyO             key output.
      */
-    private void setOrderByKeys(int[] orderedKeys, int i, int i1, int i2, int i3) {
-        orderedKeys[0] = i;
-        orderedKeys[1] = i1;
-        orderedKeys[2] = i2;
-        orderedKeys[3] = i3;
+    private void orderKeys(int[] innerOrderedKeys, int keyL, int keyR, int keyO) {
+        innerOrderedKeys[0] = keyL;
+        innerOrderedKeys[1] = keyR;
+        innerOrderedKeys[2] = keyO;
+        //print("HIT with keyL= " + keyL + ", keyR= " + keyR + ", keyO= " + keyO);
     }
 
     /**
@@ -111,8 +157,8 @@ public class CircuitGarbling {
      * @see <a href="https://dl.acm.org/citation.cfm?id=337028">Privacy preserving auctions and mechanism design</a>
      */
     private void garbleGRR3(int gateIndex) {
-        LOG.info("=========GRR3========");
-        LOG.info("AND gate with id= " + gateIndex);
+        print("=========GRR3========");
+        print("AND gate with id= " + gateIndex);
         // Calculating the keys
         keysL[0] = hashInsecure(0);
         keysL[1] = keysL[0] ^ 32767;
@@ -122,7 +168,7 @@ public class CircuitGarbling {
         keysO[0] = encryptInsecure(keysL[0], keysR[0], keysO[0], gateIndex);
         keysO[1] = hashInsecure(2);
         // Print calculated keys
-        LOG.info("\nKeys_L[0, 1] = " + Arrays.toString(keysL)
+        print("\nKeys_L[0, 1] = " + Arrays.toString(keysL)
                 + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
                 + "\nKeys_O[0, 1] = " + Arrays.toString(keysO));
         // Encrypt the four values of the AND gate
@@ -131,8 +177,8 @@ public class CircuitGarbling {
         gt[2] = encryptInsecure(keysL[1], keysR[0], keysO[0], gateIndex);
         gt[3] = encryptInsecure(keysL[1], keysR[1], keysO[1], gateIndex);
         // Print encrypted keys
-        LOG.info("\nEncKeys[0, 1, 2, 3] = " + Arrays.toString(gt));
-        LOG.info("=====================");
+        print("\ngt00= " + gt[0] + "\ngt01= " + gt[1] + "\ngt10= " + gt[2] + "\ngt11= " + gt[3]);
+        print("=====================");
     }
 
     /**
@@ -143,8 +189,8 @@ public class CircuitGarbling {
      * @param gateIndex index of the gate.
      */
     private void garbleClassic(int gateIndex) {
-        LOG.info("=======CLASSIC=======");
-        LOG.info("AND gate with id= " + gateIndex);
+        print("=======CLASSIC=======");
+        print("AND gate with id= " + gateIndex);
         // Calculating the keys
         keysL[0] = hashInsecure(0);
         keysL[1] = keysL[0] ^ 32767;
@@ -153,7 +199,7 @@ public class CircuitGarbling {
         keysO[0] = 0;
         keysO[1] = hashInsecure(2);
         // Print calculated keys
-        LOG.info("\nKeys_L[0, 1] = " + Arrays.toString(keysL)
+        print("\nKeys_L[0, 1] = " + Arrays.toString(keysL)
                 + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
                 + "\nKeys_O[0, 1] = " + Arrays.toString(keysO));
         // Encrypt the four values of the AND gate
@@ -161,8 +207,8 @@ public class CircuitGarbling {
         gt[1] = encryptInsecure(keysL[0], keysR[1], keysO[0], gateIndex);
         gt[2] = encryptInsecure(keysL[1], keysR[0], keysO[0], gateIndex);
         gt[3] = encryptInsecure(keysL[1], keysR[1], keysO[1], gateIndex);
-        LOG.info("\nEncKeys[0, 1, 2, 3] = " + Arrays.toString(gt));
-        LOG.info("=====================");
+        print("\ngt00= " + gt[0] + "\ngt01= " + gt[1] + "\ngt10= " + gt[2] + "\ngt11= " + gt[3]);
+        print("=====================");
     }
 
     /**
