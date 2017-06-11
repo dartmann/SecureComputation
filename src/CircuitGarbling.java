@@ -15,13 +15,13 @@ public class CircuitGarbling {
         /*
         Fields to use for storing the keys
          */
-        int[] keysL = new int[2];
-        int[] keysR = new int[2];
-        int[] keysO = new int[2];
+        final int[] keysL = new int[2];
+        final int[] keysR = new int[2];
+        final int[] keysO = new int[2];
         /*
         Field to store the encrypted values
          */
-        int[] gt = new int[4];
+        final int[] gt = new int[4];
         /*
         Calculating the keys
          */
