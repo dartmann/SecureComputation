@@ -24,7 +24,32 @@ public class CircuitGarbling {
         final CircuitGarbling circuitGarbling = new CircuitGarbling();
         //circuitGarbling.garbleClassic(0);
         //circuitGarbling.garbleGRR3(0);
-        circuitGarbling.garblePnP(0);
+        //circuitGarbling.garblePnP(0);
+        circuitGarbling.garbleEqualCircuit(0, 10, 10);
+    }
+
+    private void garbleEqualCircuit(int gateIndex, int a, int b) {
+        print("=========PnP========");
+        print("AND gate with id= " + gateIndex + "\n");
+        // Calculating the keys
+        keysL[0] = hashInsecure(0);
+        keysL[1] = keysL[0] ^ 32767;
+        keysR[0] = hashInsecure(1);
+        keysR[1] = keysR[0] ^ 32767;
+        keysO[1] = hashInsecure(2);
+        keysO[0] = encryptInsecure(keysL[1], keysR[1], keysO[0], gateIndex);
+        // Printing calculated keys
+        print("Keys_L[0, 1] = " + Arrays.toString(keysL) + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
+                + "\nKeys_O[0, 1] = " + Arrays.toString(keysO));
+        // Encrypt the four values of the AND gate
+        gt[0] = encryptInsecure(keysL[1], keysR[1], keysO[0], gateIndex);
+        gt[1] = encryptInsecure(keysL[1], keysR[0], keysO[1], gateIndex);
+        gt[2] = encryptInsecure(keysL[0], keysR[1], keysO[1], gateIndex);
+        gt[3] = encryptInsecure(keysL[0], keysR[0], keysO[0], gateIndex);
+        print("\ngt00= " + gt[0] + "\ngt01= " + gt[1] + "\ngt10= " + gt[2] + "\ngt11= " + gt[3]);
+        //TODO
+        print("=====================");
+        resetKeyArrays();
     }
 
     /**
@@ -42,32 +67,19 @@ public class CircuitGarbling {
         keysR[0] = hashInsecure(1);
         keysR[1] = keysR[0] ^ 32767;
         keysO[0] = hashInsecure(2);
-        //keysO[0] = 0; <- not necessary
-        //TODO: this needs to be set by knowing which combination is the first row of the AND gate
-        //  but #orderCanonicalByLsb depends on keysO already set up -> chicken egg problem
-        //keysO[1] = hashInsecure(2);
         keysO[1] = encryptInsecure(keysL[1], keysR[1], keysO[1], gateIndex);
-        // Set up an double dimensional array to order the keys by their LSB in canonical order
-        int[][] orderedKeys = orderCanonicalByLsb();
-        print(Arrays.deepToString(orderedKeys));
         // Printing calculated keys
-        print("Keys_L[0, 1] = " + Arrays.toString(keysL)
-                + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
+        print("Keys_L[0, 1] = " + Arrays.toString(keysL) + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
                 + "\nKeys_O[0, 1] = " + Arrays.toString(keysO));
         // Encrypt the four values of the AND gate
-        for (int i = 0; i < 4; i++) {
-            gt[i] = encryptInsecure(orderedKeys[i][0], orderedKeys[i][1], orderedKeys[i][2], gateIndex);
-        }
-        print("\ngt00= " + gt[0] + "\ngt01= " + gt[1] + "\ngt10= " + gt[2] + "\ngt11= " + gt[3]);
-        /*
         gt[0] = encryptInsecure(keysL[1], keysR[1], keysO[1], gateIndex);
         gt[1] = encryptInsecure(keysL[1], keysR[0], keysO[0], gateIndex);
         gt[2] = encryptInsecure(keysL[0], keysR[1], keysO[0], gateIndex);
         gt[3] = encryptInsecure(keysL[0], keysR[0], keysO[0], gateIndex);
-        */
         // Printing encrypted keys
-        //print("\ngt00= " + gt[0] + "\ngt01= " + gt[1] + "\ngt10= " + gt[2] + "\ngt11= " + gt[3]);
+        print("\ngt00= " + gt[0] + "\ngt01= " + gt[1] + "\ngt10= " + gt[2] + "\ngt11= " + gt[3]);
         print("=====================");
+        resetKeyArrays();
     }
 
     /**
@@ -167,12 +179,10 @@ public class CircuitGarbling {
         keysL[1] = keysL[0] ^ 32767;
         keysR[0] = hashInsecure(1);
         keysR[1] = keysR[0] ^ 32767;
-        keysO[0] = 0;
         keysO[0] = encryptInsecure(keysL[0], keysR[0], keysO[0], gateIndex);
         keysO[1] = hashInsecure(2);
         // Print calculated keys
-        print("\nKeys_L[0, 1] = " + Arrays.toString(keysL)
-                + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
+        print("\nKeys_L[0, 1] = " + Arrays.toString(keysL) + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
                 + "\nKeys_O[0, 1] = " + Arrays.toString(keysO));
         // Encrypt the four values of the AND gate
         gt[0] = encryptInsecure(keysL[0], keysR[0], keysO[0], gateIndex);
@@ -182,6 +192,7 @@ public class CircuitGarbling {
         // Print encrypted keys
         print("\ngt00= " + gt[0] + "\ngt01= " + gt[1] + "\ngt10= " + gt[2] + "\ngt11= " + gt[3]);
         print("=====================");
+        resetKeyArrays();
     }
 
     /**
@@ -199,11 +210,9 @@ public class CircuitGarbling {
         keysL[1] = keysL[0] ^ 32767;
         keysR[0] = hashInsecure(1);
         keysR[1] = keysR[0] ^ 32767;
-        keysO[0] = 0;
         keysO[1] = hashInsecure(2);
         // Print calculated keys
-        print("\nKeys_L[0, 1] = " + Arrays.toString(keysL)
-                + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
+        print("\nKeys_L[0, 1] = " + Arrays.toString(keysL) + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
                 + "\nKeys_O[0, 1] = " + Arrays.toString(keysO));
         // Encrypt the four values of the AND gate
         gt[0] = encryptInsecure(keysL[0], keysR[0], keysO[0], gateIndex);
@@ -212,6 +221,21 @@ public class CircuitGarbling {
         gt[3] = encryptInsecure(keysL[1], keysR[1], keysO[1], gateIndex);
         print("\ngt00= " + gt[0] + "\ngt01= " + gt[1] + "\ngt10= " + gt[2] + "\ngt11= " + gt[3]);
         print("=====================");
+        resetKeyArrays();
+    }
+
+    /**
+     * Resets the class fields to initial state.
+     */
+    private void resetKeyArrays() {
+        for (int i = 0; i < 2; i++) {
+            keysL[i] = 0;
+            keysR[i] = 0;
+            keysO[i] = 0;
+            gt[i] = 0;
+        }
+        gt[2] = 0;
+        gt[3] = 0;
     }
 
     /**
