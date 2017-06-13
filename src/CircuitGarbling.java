@@ -22,9 +22,9 @@ public class CircuitGarbling {
 
     public static void main(String[] args) {
         final CircuitGarbling circuitGarbling = new CircuitGarbling();
-        //circuitGarbling.garbleClassic(0);
-        //circuitGarbling.garbleGRR3(0);
-        //circuitGarbling.garblePnP(0);
+        circuitGarbling.garbleClassic(0);
+        circuitGarbling.garbleGRR3(0);
+        circuitGarbling.garblePnP(0);
         circuitGarbling.garbleEqualCircuit(0, 10, 10);
     }
 
@@ -210,7 +210,8 @@ public class CircuitGarbling {
         keysL[1] = keysL[0] ^ 32767;
         keysR[0] = hashInsecure(1);
         keysR[1] = keysR[0] ^ 32767;
-        keysO[1] = hashInsecure(2);
+        keysO[0] = hashInsecure(2);
+        keysO[1] = hashInsecure(3);
         // Print calculated keys
         print("\nKeys_L[0, 1] = " + Arrays.toString(keysL) + "\nKeys_R[0, 1] = " + Arrays.toString(keysR)
                 + "\nKeys_O[0, 1] = " + Arrays.toString(keysO));
