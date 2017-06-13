@@ -1,6 +1,5 @@
 import java.util.Arrays;
 
-@SuppressWarnings({"SameParameterValue", "unused"})
 public class CircuitGarbling {
 
     /**
@@ -120,6 +119,7 @@ public class CircuitGarbling {
      * @param gateIndex index of the gate.
      * @see <a href="http://web.cs.ucdavis.edu/~rogaway/papers/bmr90">The Round Complexity of Secure Protocols</a>
      */
+    @SuppressWarnings("SameParameterValue")
     private void garblePnP(int gateIndex) {
         print("=========PnP========");
         print("AND gate with id= " + gateIndex + "\n");
@@ -145,94 +145,12 @@ public class CircuitGarbling {
     }
 
     /**
-     * Orders the keys {@link #keysL}, {@link #keysR} and appropriate {@link #keysO}
-     * in an array by their LSB in canonical order.<br>
-     * This fails if a key pair is not on the one side even (e.g. keyL⁰) and on the other side odd (e.g. keyL¹).
-     *
-     * @return ordered int array with dimension [4][3].
-     */
-    private int[][] orderCanonicalByLsb() {
-        final int[][] orderedKeys = new int[4][3];
-        // This approach only works, if keyL⁰ and keyL¹ OR keyR⁰ and keyR¹  differ in their LSB
-        assert (keysL[0] % 2 == 0 && keysL[1] % 2 == 1) || (keysL[0] % 2 == 1 && keysL[1] % 2 == 0);
-        assert (keysR[0] % 2 == 0 && keysR[1] % 2 == 1) || (keysR[0] % 2 == 1 && keysR[1] % 2 == 0);
-        // First row of AND gate
-        if (keysL[0] % 2 == 0 && keysR[0] % 2 == 0) {
-            orderKeys(orderedKeys[0], keysL[0], keysR[0], keysO[0]);
-        }
-        if (keysL[0] % 2 == 0 && keysR[1] % 2 == 0) {
-            orderKeys(orderedKeys[0], keysL[0], keysR[1], keysO[0]);
-        }
-        if (keysL[1] % 2 == 0 && keysR[0] % 2 == 0) {
-            orderKeys(orderedKeys[0], keysL[1], keysR[0], keysO[0]);
-        }
-        if (keysL[1] % 2 == 0 && keysR[1] % 2 == 0) {
-            orderKeys(orderedKeys[0], keysL[1], keysR[1], keysO[1]);
-        }
-        // Second row of AND gate
-        if (keysL[0] % 2 == 0 && keysR[0] % 2 == 1) {
-            orderKeys(orderedKeys[1], keysL[0], keysR[0], keysO[0]);
-        }
-        if (keysL[0] % 2 == 0 && keysR[1] % 2 == 1) {
-            orderKeys(orderedKeys[1], keysL[0], keysR[1], keysO[0]);
-        }
-        if (keysL[1] % 2 == 0 && keysR[0] % 2 == 1) {
-            orderKeys(orderedKeys[1], keysL[1], keysR[0], keysO[0]);
-        }
-        if (keysL[1] % 2 == 0 && keysR[1] % 2 == 1) {
-            orderKeys(orderedKeys[1], keysL[1], keysR[1], keysO[1]);
-        }
-        // Third row of AND gate
-        if (keysL[0] % 2 == 1 && keysR[0] % 2 == 0) {
-            orderKeys(orderedKeys[2], keysL[0], keysR[0], keysO[0]);
-        }
-        if (keysL[0] % 2 == 1 && keysR[1] % 2 == 0) {
-            orderKeys(orderedKeys[2], keysL[0], keysR[1], keysO[0]);
-        }
-        if (keysL[1] % 2 == 1 && keysR[0] % 2 == 0) {
-            orderKeys(orderedKeys[2], keysL[1], keysR[0], keysO[0]);
-        }
-        if (keysL[1] % 2 == 1 && keysR[1] % 2 == 0) {
-            orderKeys(orderedKeys[2], keysL[1], keysR[1], keysO[1]);
-        }
-        // Fourth row of AND gate
-        if (keysL[0] % 2 == 1 && keysR[0] % 2 == 1) {
-            orderKeys(orderedKeys[3], keysL[0], keysR[0], keysO[0]);
-        }
-        if (keysL[0] % 2 == 1 && keysR[1] % 2 == 1) {
-            orderKeys(orderedKeys[3], keysL[0], keysR[1], keysO[0]);
-        }
-        if (keysL[1] % 2 == 1 && keysR[0] % 2 == 1) {
-            orderKeys(orderedKeys[3], keysL[1], keysR[0], keysO[0]);
-        }
-        if (keysL[1] % 2 == 1 && keysR[1] % 2 == 1) {
-            orderKeys(orderedKeys[3], keysL[1], keysR[1], keysO[1]);
-        }
-        return orderedKeys;
-    }
-
-    /**
-     * Sets the three given keys on their appropriate index in a given inner index of the canonical ordered array of
-     * {@link #orderCanonicalByLsb()}.
-     *
-     * @param innerOrderedKeys given inner index.
-     * @param keyL             key left.
-     * @param keyR             key right.
-     * @param keyO             key output.
-     */
-    private void orderKeys(int[] innerOrderedKeys, int keyL, int keyR, int keyO) {
-        innerOrderedKeys[0] = keyL;
-        innerOrderedKeys[1] = keyR;
-        innerOrderedKeys[2] = keyO;
-        //print("HIT with keyL= " + keyL + ", keyR= " + keyR + ", keyO= " + keyO);
-    }
-
-    /**
      * Function that implements Garbled Row Reduction.
      *
      * @param gateIndex index of the gate.
      * @see <a href="https://dl.acm.org/citation.cfm?id=337028">Privacy preserving auctions and mechanism design</a>
      */
+    @SuppressWarnings("SameParameterValue")
     private void garbleGRR3(int gateIndex) {
         print("=========GRR3========");
         print("AND gate with id= " + gateIndex);
@@ -265,6 +183,7 @@ public class CircuitGarbling {
      *
      * @param gateIndex index of the gate.
      */
+    @SuppressWarnings("SameParameterValue")
     private void garbleClassic(int gateIndex) {
         print("=======CLASSIC=======");
         print("AND gate with id= " + gateIndex);
